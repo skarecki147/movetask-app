@@ -69,7 +69,7 @@ export default function TaskDetailScreen() {
       }).unwrap();
       router.back();
     } catch {
-      /* noop */
+      void 0;
     }
   };
 
@@ -79,7 +79,7 @@ export default function TaskDetailScreen() {
       await deleteTask({ taskId: task.id, projectId }).unwrap();
       router.replace(`/(app)/(tabs)/projects/${projectId}`);
     } catch {
-      /* noop */
+      void 0;
     }
   };
 
@@ -148,8 +148,16 @@ export default function TaskDetailScreen() {
         />
       ) : null}
       <AppInput label="Tags (comma-separated)" value={tags} onChangeText={setTags} />
-      <AppButton title="Save" onPress={onSave} loading={updateState.isLoading} />
-      <AppButton title="Delete task" variant="danger" onPress={onDelete} loading={deleteState.isLoading} />
+      <View style={styles.actions}>
+        <AppButton title="Save" onPress={onSave} loading={updateState.isLoading} />
+        <AppButton
+          title="Delete task"
+          variant="danger"
+          onPress={onDelete}
+          loading={deleteState.isLoading}
+          style={styles.secondaryAction}
+        />
+      </View>
     </Screen>
   );
 }
@@ -157,4 +165,6 @@ export default function TaskDetailScreen() {
 const styles = StyleSheet.create({
   section: { marginTop: tokens.spacing.sm, marginBottom: tokens.spacing.xs },
   row: { flexDirection: 'row', flexWrap: 'wrap' },
+  actions: { marginTop: tokens.spacing.sm },
+  secondaryAction: { marginTop: tokens.spacing.sm },
 });

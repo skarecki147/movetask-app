@@ -1,4 +1,5 @@
-import { StyleSheet, View } from 'react-native';
+import type { ReactNode } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { Task } from '@/modules/tasks/domain/task';
 
@@ -12,6 +13,7 @@ import { AppText } from './AppText';
 type Props = {
   task: Task;
   onPress?: () => void;
+  trailing?: ReactNode;
 };
 
 const priorityLabel: Record<Task['priority'], string> = {
@@ -29,9 +31,9 @@ function Badge({ label }: { label: string }) {
   );
 }
 
-export function TaskCard({ task, onPress }: Props) {
+function TaskBody({ task }: { task: Task }) {
   return (
-    <AppCard onPress={onPress} style={styles.card}>
+    <>
       <AppText variant="label" numberOfLines={2}>
         {task.title}
       </AppText>
@@ -58,12 +60,51 @@ export function TaskCard({ task, onPress }: Props) {
           ))}
         </View>
       ) : null}
+    </>
+  );
+}
+
+export function TaskCard({ task, onPress, trailing }: Props) {
+  if (trailing) {
+    return (
+      <AppCard style={styles.card}>
+        <View style={styles.hStack}>
+          {onPress ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Open task ${task.title}`}
+              onPress={onPress}
+              style={({ pressed }) => [styles.mainTap, pressed && styles.mainTapPressed]}>
+              <TaskBody task={task} />
+            </Pressable>
+          ) : (
+            <View style={styles.mainTap}>
+              <TaskBody task={task} />
+            </View>
+          )}
+          <View style={styles.trailing}>{trailing}</View>
+        </View>
+      </AppCard>
+    );
+  }
+
+  return (
+    <AppCard onPress={onPress} style={styles.card}>
+      <TaskBody task={task} />
     </AppCard>
   );
 }
 
 const styles = StyleSheet.create({
   card: { marginBottom: tokens.spacing.sm },
+  hStack: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing.sm,
+  },
+  mainTap: { flex: 1, minWidth: 0 },
+  mainTapPressed: { opacity: 0.92 },
+  trailing: { justifyContent: 'center' },
   desc: { marginTop: tokens.spacing.xs },
   row: { flexDirection: 'row', flexWrap: 'wrap', marginTop: tokens.spacing.sm, gap: tokens.spacing.xs },
   badge: {

@@ -29,6 +29,7 @@ export default function ProjectListScreen() {
   const dispatch = useAppDispatch();
   const filters = useAppSelector((s) => s.ui.taskFilters);
   const [tagInput, setTagInput] = useState(filters.tags.join(', '));
+  const [showFilters, setShowFilters] = useState(false);
   const { tasks } = useTasksFacade(projectId);
 
   const filtered = useMemo(() => {
@@ -64,54 +65,67 @@ export default function ProjectListScreen() {
         value={filters.search}
         onChangeText={(search) => dispatch(setTaskFilters({ search }))}
       />
-      <AppText variant="label" style={styles.section}>
-        Status
-      </AppText>
-      <View style={styles.row}>
-        {statuses.map((s) => (
-          <AppChip
-            key={s}
-            label={s === 'all' ? 'All' : s.replace('_', ' ')}
-            selected={filters.status === s}
-            onPress={() => dispatch(setTaskFilters({ status: s }))}
-          />
-        ))}
+      <View style={styles.actionsRow}>
+        <AppButton
+          title={showFilters ? 'Hide filters' : 'Show filters'}
+          variant="ghost"
+          onPress={() => setShowFilters((prev) => !prev)}
+          style={styles.actionsButton}
+        />
+        <AppButton
+          title="Reset filters"
+          variant="ghost"
+          onPress={() => {
+            setTagInput('');
+            dispatch(resetTaskFilters());
+          }}
+          style={styles.actionsButton}
+        />
       </View>
-      <AppText variant="label" style={styles.section}>
-        Priority
-      </AppText>
-      <View style={styles.row}>
-        {priorities.map((p) => (
-          <AppChip
-            key={p}
-            label={p === 'all' ? 'All' : p}
-            selected={filters.priority === p}
-            onPress={() => dispatch(setTaskFilters({ priority: p }))}
-          />
-        ))}
-      </View>
-      <AppText variant="label" style={styles.section}>
-        Due date
-      </AppText>
-      <View style={styles.row}>
-        {dueFilters.map((d) => (
-          <AppChip
-            key={d}
-            label={d.replace('_', ' ')}
-            selected={filters.dueDate === d}
-            onPress={() => dispatch(setTaskFilters({ dueDate: d }))}
-          />
-        ))}
-      </View>
-      <AppInput label="Tags (comma-separated)" value={tagInput} onChangeText={setTagInput} />
-      <AppButton
-        title="Reset filters"
-        variant="ghost"
-        onPress={() => {
-          setTagInput('');
-          dispatch(resetTaskFilters());
-        }}
-      />
+      {showFilters ? (
+        <View style={styles.filtersPanel}>
+          <AppText variant="label" style={styles.section}>
+            Status
+          </AppText>
+          <View style={styles.row}>
+            {statuses.map((s) => (
+              <AppChip
+                key={s}
+                label={s === 'all' ? 'All' : s.replace('_', ' ')}
+                selected={filters.status === s}
+                onPress={() => dispatch(setTaskFilters({ status: s }))}
+              />
+            ))}
+          </View>
+          <AppText variant="label" style={styles.section}>
+            Priority
+          </AppText>
+          <View style={styles.row}>
+            {priorities.map((p) => (
+              <AppChip
+                key={p}
+                label={p === 'all' ? 'All' : p}
+                selected={filters.priority === p}
+                onPress={() => dispatch(setTaskFilters({ priority: p }))}
+              />
+            ))}
+          </View>
+          <AppText variant="label" style={styles.section}>
+            Due date
+          </AppText>
+          <View style={styles.row}>
+            {dueFilters.map((d) => (
+              <AppChip
+                key={d}
+                label={d.replace('_', ' ')}
+                selected={filters.dueDate === d}
+                onPress={() => dispatch(setTaskFilters({ dueDate: d }))}
+              />
+            ))}
+          </View>
+          <AppInput label="Tags (comma-separated)" value={tagInput} onChangeText={setTagInput} />
+        </View>
+      ) : null}
       <FlatList
         data={filtered}
         keyExtractor={(t) => t.id}
@@ -136,5 +150,8 @@ export default function ProjectListScreen() {
 const styles = StyleSheet.create({
   section: { marginTop: tokens.spacing.sm, marginBottom: tokens.spacing.xs },
   row: { flexDirection: 'row', flexWrap: 'wrap' },
+  actionsRow: { flexDirection: 'row', marginTop: tokens.spacing.sm },
+  actionsButton: { flex: 1 },
+  filtersPanel: { marginTop: tokens.spacing.xs },
   list: { flex: 1, marginTop: tokens.spacing.md },
 });
