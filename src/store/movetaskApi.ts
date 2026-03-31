@@ -97,6 +97,16 @@ export const movetaskApi = createApi({
       invalidatesTags: (_r, _e, id) => [{ type: 'Project', id }, 'Project', 'Task'],
     }),
 
+    reorderProjects: build.mutation<void, string[]>({
+      queryFn: async (orderedProjectIds) => {
+        const session = await authRepository.getSession();
+        if (!session) return unauthorized();
+        await projectRepository.reorderProjects(session.userId, orderedProjectIds);
+        return { data: null as unknown as void };
+      },
+      invalidatesTags: ['Project'],
+    }),
+
     allTasksForUser: build.query<Task[], void>({
       queryFn: async () => {
         const session = await authRepository.getSession();
@@ -170,6 +180,7 @@ export const {
   useCreateProjectMutation,
   useUpdateProjectMutation,
   useDeleteProjectMutation,
+  useReorderProjectsMutation,
   useTasksByProjectQuery,
   useCreateTaskMutation,
   useUpdateTaskMutation,

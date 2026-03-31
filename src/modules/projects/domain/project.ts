@@ -4,6 +4,7 @@ export type Project = {
   name: string;
   description?: string;
   createdAt: string;
+  sortOrder: number;
 };
 
 export type CreateProjectInput = {

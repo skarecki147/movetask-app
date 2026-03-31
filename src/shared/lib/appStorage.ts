@@ -16,6 +16,7 @@ export type StoredProject = {
   name: string;
   description?: string;
   createdAt: string;
+  sortOrder?: number;
 };
 
 export type StoredTask = {
@@ -82,7 +83,6 @@ export async function mutateAppData(mutator: (draft: AppData) => void): Promise<
   return next;
 }
 
-/** Test helper: reset in-memory cache */
 export function __resetAppDataCacheForTests(): void {
   memoryCache = null;
 }

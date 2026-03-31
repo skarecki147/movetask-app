@@ -5,4 +5,5 @@ export interface ProjectRepository {
   createProject(input: CreateProjectInput): Promise<Project>;
   updateProject(input: UpdateProjectInput): Promise<Project>;
   deleteProject(projectId: string): Promise<void>;
+  reorderProjects(userId: string, orderedProjectIds: string[]): Promise<void>;
 }

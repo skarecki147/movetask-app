@@ -9,5 +9,6 @@ export function storedProjectToDomain(row: StoredProject): Project {
     name: row.name,
     description: row.description,
     createdAt: row.createdAt,
+    sortOrder: row.sortOrder ?? 0,
   };
 }

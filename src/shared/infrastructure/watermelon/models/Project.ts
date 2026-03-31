@@ -8,4 +8,5 @@ export class Project extends Model {
   @field('name') name!: string;
   @field('description') description?: string;
   @field('created_at') createdAt!: number;
+  @field('sort_order') sortOrder?: number;
 }

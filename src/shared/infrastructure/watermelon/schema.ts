@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export const watermelonSchema = appSchema({
-  version: 1,
+  version: 2,
   tables: [
     tableSchema({
       name: 'users',
@@ -17,6 +17,7 @@ export const watermelonSchema = appSchema({
         { name: 'name', type: 'string' },
         { name: 'description', type: 'string', isOptional: true },
         { name: 'created_at', type: 'number' },
+        { name: 'sort_order', type: 'number', isOptional: true },
       ],
     }),
     tableSchema({

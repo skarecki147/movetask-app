@@ -20,6 +20,7 @@ export function wmProjectToStored(p: ProjectModel): StoredProject {
     name: p.name,
     description: p.description,
     createdAt: new Date(p.createdAt).toISOString(),
+    sortOrder: p.sortOrder,
   };
 }
 
