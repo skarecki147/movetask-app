@@ -32,16 +32,26 @@ export const movetaskApi = createApi({
 
     signUp: build.mutation<Session, { email: string; password: string }>({
       queryFn: async ({ email, password }) => {
-        const data = await authRepository.signUp(email, password);
-        return { data };
+        try {
+          const data = await authRepository.signUp(email, password);
+          return { data };
+        } catch (e) {
+          const message = e instanceof Error ? e.message : 'Sign up failed';
+          return { error: { status: 400, data: message } };
+        }
       },
       invalidatesTags: ['Session', 'Project', 'Task'],
     }),
 
     signIn: build.mutation<Session, { email: string; password: string }>({
       queryFn: async ({ email, password }) => {
-        const data = await authRepository.signIn(email, password);
-        return { data };
+        try {
+          const data = await authRepository.signIn(email, password);
+          return { data };
+        } catch (e) {
+          const message = e instanceof Error ? e.message : 'Sign in failed';
+          return { error: { status: 401, data: message } };
+        }
       },
       invalidatesTags: ['Session', 'Project', 'Task'],
     }),

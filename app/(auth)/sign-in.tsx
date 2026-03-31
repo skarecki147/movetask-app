@@ -7,6 +7,11 @@ import { Screen } from '@/shared/ui/Screen';
 import { AppButton } from '@/shared/ui/AppButton';
 import { AppInput } from '@/shared/ui/AppInput';
 import { AppText } from '@/shared/ui/AppText';
+import {
+  emailFormatError,
+  passwordMinLengthError,
+} from '@/shared/lib/authCredentialsValidation';
+import { rtkMutationErrorMessage } from '@/shared/lib/rtkMutationErrorMessage';
 import { tokens } from '@/shared/theme/tokens';
 
 export default function SignInScreen() {
@@ -14,15 +19,22 @@ export default function SignInScreen() {
   const { signIn, signInState } = useAuthFacade();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const onSubmit = async () => {
+    const eErr = emailFormatError(email);
+    const pErr = passwordMinLengthError(password);
+    setEmailError(eErr);
+    setPasswordError(pErr);
     setError(null);
+    if (eErr || pErr) return;
     try {
-      await signIn({ email, password }).unwrap();
+      await signIn({ email: email.trim(), password }).unwrap();
       router.replace('/(app)/(tabs)/projects');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Sign in failed');
+      setError(rtkMutationErrorMessage(e, 'Sign in failed'));
     }
   };
 
@@ -40,9 +52,22 @@ export default function SignInScreen() {
           autoCapitalize="none"
           keyboardType="email-address"
           value={email}
-          onChangeText={setEmail}
+          error={emailError ?? undefined}
+          onChangeText={(v) => {
+            setEmail(v);
+            setEmailError(null);
+          }}
         />
-        <AppInput label="Password" secureTextEntry value={password} onChangeText={setPassword} />
+        <AppInput
+          label="Password"
+          passwordVisibilityToggle
+          value={password}
+          error={passwordError ?? undefined}
+          onChangeText={(v) => {
+            setPassword(v);
+            setPasswordError(null);
+          }}
+        />
         {error ? (
           <AppText variant="caption" style={styles.err}>
             {error}
