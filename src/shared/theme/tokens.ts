@@ -50,11 +50,11 @@ export const lightColors: ColorPalette = {
   text: '#111827',
   textMuted: '#6b7280',
   border: '#e5e7eb',
-  primary: '#2563eb',
+  primary: '#7c3aed',
   primaryText: '#ffffff',
-  danger: '#dc2626',
+  danger: '#ea580c',
   success: '#16a34a',
-  tint: '#2563eb',
+  tint: '#7c3aed',
 };
 
 export const darkColors: ColorPalette = {
@@ -63,9 +63,9 @@ export const darkColors: ColorPalette = {
   text: '#f8fafc',
   textMuted: '#94a3b8',
   border: '#334155',
-  primary: '#3b82f6',
+  primary: '#a78bfa',
   primaryText: '#ffffff',
-  danger: '#f87171',
+  danger: '#fb923c',
   success: '#4ade80',
-  tint: '#3b82f6',
+  tint: '#a78bfa',
 };
