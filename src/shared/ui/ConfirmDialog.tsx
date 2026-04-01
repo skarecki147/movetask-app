@@ -1,5 +1,6 @@
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
+import { neonContainerStyle } from '@/shared/theme/neon';
 import { useMovetaskTheme } from '@/shared/theme/ThemeContext';
 import { tokens } from '@/shared/theme/tokens';
 
@@ -27,7 +28,7 @@ export function ConfirmDialog({
   onCancel,
   confirmLoading,
 }: Props) {
-  const { colors } = useMovetaskTheme();
+  const { colors, resolved } = useMovetaskTheme();
 
   return (
     <Modal visible={visible} animationType="fade" transparent statusBarTranslucent>
@@ -39,9 +40,14 @@ export function ConfirmDialog({
           onPress={onCancel}
         />
         <View
-          style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          style={[
+            styles.card,
+            neonContainerStyle(resolved, tokens.radius.lg),
+            { backgroundColor: colors.surface },
+          ]}
           accessibilityRole="alert"
-          onStartShouldSetResponder={() => true}>
+          onStartShouldSetResponder={() => true}
+        >
           <AppText variant="title" style={styles.title}>
             {title}
           </AppText>
@@ -49,7 +55,12 @@ export function ConfirmDialog({
             {message}
           </AppText>
           <View style={styles.actions}>
-            <AppButton title={cancelLabel} variant="ghost" onPress={onCancel} disabled={confirmLoading} />
+            <AppButton
+              title={cancelLabel}
+              variant="ghost"
+              onPress={onCancel}
+              disabled={confirmLoading}
+            />
             <AppButton
               title={confirmLabel}
               variant="danger"
@@ -79,5 +90,10 @@ const styles = StyleSheet.create({
   },
   title: { marginBottom: tokens.spacing.sm },
   message: { marginBottom: tokens.spacing.md },
-  actions: { flexDirection: 'row', justifyContent: 'flex-end', flexWrap: 'wrap', gap: tokens.spacing.sm },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    flexWrap: 'wrap',
+    gap: tokens.spacing.sm,
+  },
 });

@@ -23,9 +23,17 @@ const priorityLabel: Record<Task['priority'], string> = {
 };
 
 function Badge({ label }: { label: string }) {
-  const { colors } = useMovetaskTheme();
+  const { resolved } = useMovetaskTheme();
   return (
-    <View style={[styles.badge, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+    <View
+      style={[
+        styles.badge,
+        {
+          borderColor: resolved === 'dark' ? 'rgba(167,139,250,0.45)' : 'rgba(124,58,237,0.3)',
+          backgroundColor: resolved === 'dark' ? 'rgba(139,92,246,0.16)' : 'rgba(124,58,237,0.08)',
+        },
+      ]}
+    >
       <AppText variant="caption">{label}</AppText>
     </View>
   );
@@ -68,13 +76,14 @@ export function TaskCard({ task, onPress, trailing }: Props) {
   if (trailing) {
     return (
       <AppCard style={styles.card}>
-        <View style={styles.hStack}>
+        <View style={styles.hStackWithTrailing}>
           {onPress ? (
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`Open task ${task.title}`}
               onPress={onPress}
-              style={({ pressed }) => [styles.mainTap, pressed && styles.mainTapPressed]}>
+              style={({ pressed }) => [styles.mainTap, pressed && styles.mainTapPressed]}
+            >
               <TaskBody task={task} />
             </Pressable>
           ) : (
@@ -102,11 +111,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: tokens.spacing.sm,
   },
+  hStackWithTrailing: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: tokens.spacing.sm,
+  },
   mainTap: { flex: 1, minWidth: 0 },
   mainTapPressed: { opacity: 0.92 },
   trailing: { justifyContent: 'center' },
   desc: { marginTop: tokens.spacing.xs },
-  row: { flexDirection: 'row', flexWrap: 'wrap', marginTop: tokens.spacing.sm, gap: tokens.spacing.xs },
+  row: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: tokens.spacing.sm,
+    gap: tokens.spacing.xs,
+  },
   badge: {
     paddingHorizontal: tokens.spacing.sm,
     paddingVertical: 2,

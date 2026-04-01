@@ -1,8 +1,9 @@
-import type { TextInputProps } from 'react-native';
-import { useEffect, useState } from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Pressable, TextInput, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import type { TextInputProps } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
+import { neonChromeOutline, neonInputGlowStyle } from '@/shared/theme/neon';
 import { useMovetaskTheme } from '@/shared/theme/ThemeContext';
 import { tokens } from '@/shared/theme/tokens';
 
@@ -25,16 +26,14 @@ export function AppInput({
   onChangeText,
   ...rest
 }: Props) {
-  const { colors } = useMovetaskTheme();
+  const { colors, resolved } = useMovetaskTheme();
   const [passwordVisible, setPasswordVisible] = useState(false);
   const isControlled = value !== undefined;
   const [uncontrolledHasChars, setUncontrolledHasChars] = useState(
     () => String(defaultValue ?? '').length > 0,
   );
 
-  const showVisibilityToggle = isControlled
-    ? String(value ?? '').length > 0
-    : uncontrolledHasChars;
+  const showVisibilityToggle = isControlled ? String(value ?? '').length > 0 : uncontrolledHasChars;
 
   useEffect(() => {
     if (isControlled && String(value ?? '').length === 0) {
@@ -42,8 +41,11 @@ export function AppInput({
     }
   }, [value, isControlled]);
 
-  const borderColor = error ? colors.danger : colors.border;
+  const outline = error
+    ? { borderWidth: 1, borderColor: colors.danger }
+    : neonChromeOutline(resolved);
   const bg = colors.surface;
+  const inputGlow = error ? {} : neonInputGlowStyle(resolved);
 
   const errorCaption = error ? (
     <AppText variant="caption" style={{ color: colors.danger, marginTop: tokens.spacing.xs }}>
@@ -70,12 +72,14 @@ export function AppInput({
         <View
           style={[
             styles.inputRowShell,
+            inputGlow,
+            outline,
             {
-              borderColor,
               backgroundColor: bg,
               paddingRight: showVisibilityToggle ? tokens.spacing.xs : tokens.spacing.md,
             },
-          ]}>
+          ]}
+        >
           <TextInput
             placeholderTextColor={colors.textMuted}
             style={[
@@ -97,7 +101,8 @@ export function AppInput({
               accessibilityLabel={passwordVisible ? 'Hide password' : 'Show password'}
               hitSlop={8}
               onPress={() => setPasswordVisible((v) => !v)}
-              style={styles.visibilityBtn}>
+              style={styles.visibilityBtn}
+            >
               <FontAwesome
                 name={passwordVisible ? 'eye-slash' : 'eye'}
                 size={20}
@@ -118,20 +123,17 @@ export function AppInput({
           {label}
         </AppText>
       ) : null}
-      <TextInput
-        placeholderTextColor={colors.textMuted}
-        style={[
-          styles.input,
-          {
-            color: colors.text,
-            borderColor,
-            backgroundColor: bg,
-          },
-          style,
-        ]}
-        secureTextEntry={secureTextEntry}
-        {...rest}
-      />
+      <View style={[styles.inputShell, inputGlow, outline, { backgroundColor: bg }]}>
+        <TextInput
+          placeholderTextColor={colors.textMuted}
+          style={[styles.inputField, { color: colors.text }, style]}
+          secureTextEntry={secureTextEntry}
+          value={value}
+          defaultValue={defaultValue}
+          onChangeText={onChangeText}
+          {...rest}
+        />
+      </View>
       {errorCaption}
     </View>
   );
@@ -140,17 +142,21 @@ export function AppInput({
 const styles = StyleSheet.create({
   wrap: { marginBottom: tokens.spacing.md },
   label: { marginBottom: tokens.spacing.xs },
-  input: {
-    borderWidth: StyleSheet.hairlineWidth,
+  inputShell: {
     borderRadius: tokens.radius.md,
     paddingHorizontal: tokens.spacing.md,
     paddingVertical: tokens.spacing.sm,
+  },
+  inputField: {
+    padding: 0,
+    margin: 0,
     fontSize: tokens.typography.body,
+    borderWidth: 0,
+    minHeight: 22,
   },
   inputRowShell: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
     borderRadius: tokens.radius.md,
     paddingLeft: tokens.spacing.md,
     paddingRight: tokens.spacing.xs,
