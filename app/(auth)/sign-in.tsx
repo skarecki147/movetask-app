@@ -1,4 +1,4 @@
-import { useHeaderHeight } from '@react-navigation/elements';
+import { useContentPaddingBelowTransparentHeader } from '@/shared/lib/useContentPaddingBelowTransparentHeader';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
@@ -14,7 +14,7 @@ import { useMovetaskTheme } from '@/shared/theme/ThemeContext';
 import { tokens } from '@/shared/theme/tokens';
 
 export default function SignInScreen() {
-  const headerHeight = useHeaderHeight();
+  const headerContentPadding = useContentPaddingBelowTransparentHeader();
   const { colors } = useMovetaskTheme();
   const router = useRouter();
   const { signIn, signInState } = useAuthFacade();
@@ -40,7 +40,7 @@ export default function SignInScreen() {
   };
 
   return (
-    <Screen scroll contentStyle={{ paddingTop: headerHeight }}>
+    <Screen scroll contentStyle={{ paddingTop: headerContentPadding }}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <AppText variant="heading" style={styles.heading}>
           Welcome back

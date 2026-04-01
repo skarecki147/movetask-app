@@ -1,5 +1,5 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { useHeaderHeight } from '@react-navigation/elements';
+import { useContentPaddingBelowTransparentHeader } from '@/shared/lib/useContentPaddingBelowTransparentHeader';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
@@ -25,7 +25,7 @@ import { TodayTasksList } from './TodayTasksList';
 
 export default function TodayScreen() {
   const router = useRouter();
-  const headerHeight = useHeaderHeight();
+  const headerContentPadding = useContentPaddingBelowTransparentHeader();
   const { colors } = useMovetaskTheme();
   const filters = useAppSelector((s) => s.ui.taskFilters);
   const tasksQuery = useAllTasksFacade();
@@ -121,7 +121,7 @@ export default function TodayScreen() {
 
   return (
     <Screen>
-      <View style={[styles.body, { paddingTop: headerHeight }]}>
+      <View style={[styles.body, { paddingTop: headerContentPadding }]}>
         <AppText variant="body" muted style={styles.sub}>
           Tasks due today or overdue
         </AppText>

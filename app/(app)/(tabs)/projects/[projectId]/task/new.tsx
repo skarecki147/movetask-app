@@ -1,4 +1,4 @@
-import { useHeaderHeight } from '@react-navigation/elements';
+import { useContentPaddingBelowTransparentHeader } from '@/shared/lib/useContentPaddingBelowTransparentHeader';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
@@ -18,7 +18,7 @@ const priorities: TaskPriority[] = ['low', 'medium', 'high'];
 
 export default function NewTaskScreen() {
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
-  const headerHeight = useHeaderHeight();
+  const headerContentPadding = useContentPaddingBelowTransparentHeader();
   const router = useRouter();
   const { createTask, createState } = useTasksFacade(projectId);
   const [title, setTitle] = useState('');
@@ -54,7 +54,7 @@ export default function NewTaskScreen() {
   };
 
   return (
-    <Screen scroll contentStyle={{ paddingTop: headerHeight }}>
+    <Screen scroll contentStyle={{ paddingTop: headerContentPadding }}>
       <AppInput label="Title" value={title} onChangeText={setTitle} />
       <AppInput label="Description" value={description} onChangeText={setDescription} multiline />
       <AppText variant="label" style={styles.section}>

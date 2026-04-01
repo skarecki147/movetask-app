@@ -1,4 +1,4 @@
-import { useHeaderHeight } from '@react-navigation/elements';
+import { useContentPaddingBelowTransparentHeader } from '@/shared/lib/useContentPaddingBelowTransparentHeader';
 import { StyleSheet, View } from 'react-native';
 
 import { useMovetaskTheme } from '@/shared/theme/ThemeContext';
@@ -15,11 +15,11 @@ const options: { key: ThemePreference; label: string }[] = [
 ];
 
 export default function SettingsScreen() {
-  const headerHeight = useHeaderHeight();
+  const headerContentPadding = useContentPaddingBelowTransparentHeader();
   const { preference, setPreference } = useMovetaskTheme();
 
   return (
-    <Screen scroll contentStyle={{ paddingTop: headerHeight }}>
+    <Screen scroll contentStyle={{ paddingTop: headerContentPadding }}>
       <AppText variant="heading" style={styles.title}>
         Settings
       </AppText>

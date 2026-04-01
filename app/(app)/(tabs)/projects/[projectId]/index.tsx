@@ -1,6 +1,6 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import { useHeaderHeight } from '@react-navigation/elements';
+import { useContentPaddingBelowTransparentHeader } from '@/shared/lib/useContentPaddingBelowTransparentHeader';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
@@ -38,10 +38,10 @@ const columnLabels: Record<TaskStatus, string> = {
   done: 'Done',
 };
 
-const screenUnderHeader = (headerHeight: number) => ({
+const screenUnderHeader = (paddingTop: number) => ({
   flex: 1,
   minHeight: 0,
-  paddingTop: headerHeight,
+  paddingTop,
 });
 
 const FAB_SIZE = 56;
@@ -50,7 +50,7 @@ const FAB_RIGHT_INSET = tokens.spacing.xxl;
 
 export default function ProjectBoardScreen() {
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
-  const headerHeight = useHeaderHeight();
+  const headerContentPadding = useContentPaddingBelowTransparentHeader();
   const tabBarHeight = useBottomTabBarHeight();
   const router = useRouter();
   const { colors, resolved } = useMovetaskTheme();
@@ -133,7 +133,7 @@ export default function ProjectBoardScreen() {
 
   if (tasks.isLoading) {
     return (
-      <Screen contentStyle={screenUnderHeader(headerHeight)}>
+      <Screen contentStyle={screenUnderHeader(headerContentPadding)}>
         <Loader />
         {newTaskFab}
       </Screen>
@@ -142,7 +142,7 @@ export default function ProjectBoardScreen() {
 
   if (tasks.isError) {
     return (
-      <Screen contentStyle={screenUnderHeader(headerHeight)}>
+      <Screen contentStyle={screenUnderHeader(headerContentPadding)}>
         <ErrorState
           message="Could not load tasks"
           action={<AppButton title="Retry" onPress={tasks.refetch} />}
@@ -159,7 +159,7 @@ export default function ProjectBoardScreen() {
   );
 
   return (
-    <Screen contentStyle={screenUnderHeader(headerHeight)}>
+    <Screen contentStyle={screenUnderHeader(headerContentPadding)}>
       <View style={styles.tabRow}>
         {STATUSES.map((status) => {
           const selected = selectedTab === status;
@@ -193,11 +193,7 @@ export default function ProjectBoardScreen() {
 
       {total === 0 ? (
         <View style={{ flex: 1, paddingBottom: listBottomPad }}>
-          <EmptyState
-            title="No tasks"
-            message="Add a task to see it here."
-            action={<AppButton title="Add task" onPress={() => router.push(newTaskRoute)} />}
-          />
+          <EmptyState title="No tasks" message="Add a task to see it here." />
         </View>
       ) : (
         <FlatList
@@ -215,13 +211,6 @@ export default function ProjectBoardScreen() {
             <EmptyState
               title={`No ${columnLabels[selectedTab]} tasks`}
               message="Switch tabs or create a task."
-              action={
-                <AppButton
-                  title="Add task"
-                  variant="secondary"
-                  onPress={() => router.push(newTaskRoute)}
-                />
-              }
             />
           }
           renderItem={({ item }) => (

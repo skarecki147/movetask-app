@@ -1,4 +1,4 @@
-import { useHeaderHeight } from '@react-navigation/elements';
+import { useContentPaddingBelowTransparentHeader } from '@/shared/lib/useContentPaddingBelowTransparentHeader';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
@@ -28,7 +28,7 @@ const dueFilters: DueDateFilter[] = ['any', 'today', 'overdue', 'upcoming', 'no_
 
 export default function ProjectListScreen() {
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
-  const headerHeight = useHeaderHeight();
+  const headerContentPadding = useContentPaddingBelowTransparentHeader();
   const router = useRouter();
   const { colors, resolved } = useMovetaskTheme();
   const dispatch = useAppDispatch();
@@ -46,7 +46,7 @@ export default function ProjectListScreen() {
     return filterTasks(list, { ...filters, tags: tagList });
   }, [tasks.data, filters, tagInput]);
 
-  const underHeader = { flex: 1, minHeight: 0, paddingTop: headerHeight };
+  const underHeader = { flex: 1, minHeight: 0, paddingTop: headerContentPadding };
 
   if (tasks.isLoading) {
     return (

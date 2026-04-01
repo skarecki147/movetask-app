@@ -1,4 +1,4 @@
-import { useHeaderHeight } from '@react-navigation/elements';
+import { useContentPaddingBelowTransparentHeader } from '@/shared/lib/useContentPaddingBelowTransparentHeader';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
@@ -19,7 +19,7 @@ const priorities: TaskPriority[] = ['low', 'medium', 'high'];
 
 export default function TaskDetailScreen() {
   const { projectId, taskId } = useLocalSearchParams<{ projectId: string; taskId: string }>();
-  const headerHeight = useHeaderHeight();
+  const headerContentPadding = useContentPaddingBelowTransparentHeader();
   const router = useRouter();
   const { tasks, updateTask, updateState, deleteTask, deleteState } = useTasksFacade(projectId);
 
@@ -77,11 +77,11 @@ export default function TaskDetailScreen() {
     }
   };
 
-  const scrollUnderHeader = { paddingTop: headerHeight };
+  const scrollUnderHeader = { paddingTop: headerContentPadding };
 
   if (tasks.isLoading) {
     return (
-      <Screen contentStyle={{ flex: 1, paddingTop: headerHeight }}>
+      <Screen contentStyle={{ flex: 1, paddingTop: headerContentPadding }}>
         <Loader />
       </Screen>
     );

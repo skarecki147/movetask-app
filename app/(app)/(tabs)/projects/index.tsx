@@ -1,5 +1,5 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { useHeaderHeight } from '@react-navigation/elements';
+import { useContentPaddingBelowTransparentHeader } from '@/shared/lib/useContentPaddingBelowTransparentHeader';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Modal, Platform, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
@@ -26,7 +26,7 @@ import { ProjectsList } from './ProjectsList';
 
 export default function ProjectsScreen() {
   const { colors, resolved } = useMovetaskTheme();
-  const headerHeight = useHeaderHeight();
+  const headerContentPadding = useContentPaddingBelowTransparentHeader();
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { projects, createProject, createState, deleteProject, deleteState, reorderProjects } =
@@ -178,7 +178,7 @@ export default function ProjectsScreen() {
 
   return (
     <Screen>
-      <View style={[styles.body, { paddingTop: headerHeight }]}>
+      <View style={[styles.body, { paddingTop: headerContentPadding }]}>
         <View style={styles.header}>
           <AppButton title="New project" variant="secondary" onPress={() => setOpen(true)} />
         </View>
