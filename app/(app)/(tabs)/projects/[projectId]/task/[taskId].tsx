@@ -1,6 +1,6 @@
+import { useHeaderHeight } from '@react-navigation/elements';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { useTasksFacade } from '@/modules/tasks/application/useTasksFacade';
@@ -10,6 +10,7 @@ import { AppButton } from '@/shared/ui/AppButton';
 import { AppChip } from '@/shared/ui/AppChip';
 import { AppInput } from '@/shared/ui/AppInput';
 import { AppText } from '@/shared/ui/AppText';
+import { DueDatePickerModal } from '@/shared/ui/DueDatePickerModal';
 import { Loader } from '@/shared/ui/Loader';
 import { Screen } from '@/shared/ui/Screen';
 
@@ -18,6 +19,7 @@ const priorities: TaskPriority[] = ['low', 'medium', 'high'];
 
 export default function TaskDetailScreen() {
   const { projectId, taskId } = useLocalSearchParams<{ projectId: string; taskId: string }>();
+  const headerHeight = useHeaderHeight();
   const router = useRouter();
   const { tasks, updateTask, updateState, deleteTask, deleteState } = useTasksFacade(projectId);
 
@@ -32,14 +34,6 @@ export default function TaskDetailScreen() {
   const [tags, setTags] = useState('');
 
   const dueDateValue = dueDate ? new Date(`${dueDate}T00:00:00`) : new Date();
-
-  const onDueDateChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (Platform.OS !== 'ios') {
-      setShowDueDatePicker(false);
-    }
-    if (!selectedDate) return;
-    setDueDate(selectedDate.toISOString().slice(0, 10));
-  };
 
   useEffect(() => {
     if (!task) return;
@@ -83,9 +77,11 @@ export default function TaskDetailScreen() {
     }
   };
 
+  const scrollUnderHeader = { paddingTop: headerHeight };
+
   if (tasks.isLoading) {
     return (
-      <Screen>
+      <Screen contentStyle={{ flex: 1, paddingTop: headerHeight }}>
         <Loader />
       </Screen>
     );
@@ -93,7 +89,7 @@ export default function TaskDetailScreen() {
 
   if (!task) {
     return (
-      <Screen scroll>
+      <Screen scroll contentStyle={scrollUnderHeader}>
         <AppText variant="body">Task not found.</AppText>
         <AppButton title="Back" onPress={() => router.back()} />
       </Screen>
@@ -101,7 +97,7 @@ export default function TaskDetailScreen() {
   }
 
   return (
-    <Screen scroll>
+    <Screen scroll contentStyle={scrollUnderHeader}>
       <AppInput label="Title" value={title} onChangeText={setTitle} />
       <AppInput label="Description" value={description} onChangeText={setDescription} multiline />
       <AppText variant="label" style={styles.section}>
@@ -139,14 +135,12 @@ export default function TaskDetailScreen() {
           </View>
         </Pressable>
       )}
-      {showDueDatePicker && Platform.OS !== 'web' ? (
-        <DateTimePicker
-          mode="date"
-          value={dueDateValue}
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={onDueDateChange}
-        />
-      ) : null}
+      <DueDatePickerModal
+        visible={showDueDatePicker && Platform.OS !== 'web'}
+        date={dueDateValue}
+        onConfirm={(d) => setDueDate(d.toISOString().slice(0, 10))}
+        onDismiss={() => setShowDueDatePicker(false)}
+      />
       <AppInput label="Tags (comma-separated)" value={tags} onChangeText={setTags} />
       <View style={styles.actions}>
         <AppButton title="Save" onPress={onSave} loading={updateState.isLoading} />

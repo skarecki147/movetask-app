@@ -1,3 +1,4 @@
+import { useHeaderHeight } from '@react-navigation/elements';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
@@ -8,6 +9,8 @@ import type { TaskPriority, TaskStatus } from '@/modules/tasks/domain/task';
 import type { DueDateFilter } from '@/shared/types/ui';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { resetTaskFilters, setTaskFilters } from '@/store/uiSlice';
+import { neonContainerStyle } from '@/shared/theme/neon';
+import { useMovetaskTheme } from '@/shared/theme/ThemeContext';
 import { tokens } from '@/shared/theme/tokens';
 import { AppButton } from '@/shared/ui/AppButton';
 import { AppChip } from '@/shared/ui/AppChip';
@@ -25,7 +28,9 @@ const dueFilters: DueDateFilter[] = ['any', 'today', 'overdue', 'upcoming', 'no_
 
 export default function ProjectListScreen() {
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
+  const headerHeight = useHeaderHeight();
   const router = useRouter();
+  const { colors, resolved } = useMovetaskTheme();
   const dispatch = useAppDispatch();
   const filters = useAppSelector((s) => s.ui.taskFilters);
   const [tagInput, setTagInput] = useState(filters.tags.join(', '));
@@ -41,9 +46,11 @@ export default function ProjectListScreen() {
     return filterTasks(list, { ...filters, tags: tagList });
   }, [tasks.data, filters, tagInput]);
 
+  const underHeader = { flex: 1, minHeight: 0, paddingTop: headerHeight };
+
   if (tasks.isLoading) {
     return (
-      <Screen>
+      <Screen contentStyle={underHeader}>
         <Loader />
       </Screen>
     );
@@ -51,14 +58,17 @@ export default function ProjectListScreen() {
 
   if (tasks.isError) {
     return (
-      <Screen>
-        <ErrorState message="Could not load tasks" action={<AppButton title="Retry" onPress={tasks.refetch} />} />
+      <Screen contentStyle={underHeader}>
+        <ErrorState
+          message="Could not load tasks"
+          action={<AppButton title="Retry" onPress={tasks.refetch} />}
+        />
       </Screen>
     );
   }
 
   return (
-    <Screen>
+    <Screen contentStyle={underHeader}>
       <AppInput
         label="Search"
         placeholder="Title"
@@ -83,7 +93,13 @@ export default function ProjectListScreen() {
         />
       </View>
       {showFilters ? (
-        <View style={styles.filtersPanel}>
+        <View
+          style={[
+            styles.filtersPanel,
+            neonContainerStyle(resolved),
+            { backgroundColor: colors.surface },
+          ]}
+        >
           <AppText variant="label" style={styles.section}>
             Status
           </AppText>
@@ -130,9 +146,7 @@ export default function ProjectListScreen() {
         data={filtered}
         keyExtractor={(t) => t.id}
         style={styles.list}
-        refreshControl={
-          <RefreshControl refreshing={tasks.isFetching} onRefresh={tasks.refetch} />
-        }
+        refreshControl={<RefreshControl refreshing={tasks.isFetching} onRefresh={tasks.refetch} />}
         ListEmptyComponent={
           <EmptyState title="No tasks match" message="Try adjusting filters or create a task." />
         }
@@ -152,6 +166,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap' },
   actionsRow: { flexDirection: 'row', marginTop: tokens.spacing.sm },
   actionsButton: { flex: 1 },
-  filtersPanel: { marginTop: tokens.spacing.xs },
+  filtersPanel: { marginTop: tokens.spacing.xs, padding: tokens.spacing.md },
   list: { flex: 1, marginTop: tokens.spacing.md },
 });

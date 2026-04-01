@@ -1,18 +1,20 @@
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useHeaderHeight } from '@react-navigation/elements';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import {
-  FlatList,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { FlatList, Modal, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
-import type { Task, TaskStatus } from '@/modules/tasks/domain/task';
 import { useTasksFacade } from '@/modules/tasks/application/useTasksFacade';
-import { COMPACT_LAYOUT_MAX_WIDTH } from '@/shared/constants/layout';
+import type { Task, TaskStatus } from '@/modules/tasks/domain/task';
+import {
+  cardSurfaceGradient,
+  gradientStops,
+  primaryButtonGradient,
+} from '@/shared/theme/gradients';
+import { neonContainerStyle } from '@/shared/theme/neon';
+import { useMovetaskTheme } from '@/shared/theme/ThemeContext';
 import { tokens } from '@/shared/theme/tokens';
 import { AppButton } from '@/shared/ui/AppButton';
 import { AppText } from '@/shared/ui/AppText';
@@ -21,23 +23,39 @@ import { ErrorState } from '@/shared/ui/ErrorState';
 import { Loader } from '@/shared/ui/Loader';
 import { Screen } from '@/shared/ui/Screen';
 import { TaskCard } from '@/shared/ui/TaskCard';
-import { useMovetaskTheme } from '@/shared/theme/ThemeContext';
 
-const COLUMNS: TaskStatus[] = ['todo', 'in_progress', 'done'];
+const STATUSES: TaskStatus[] = ['todo', 'in_progress', 'done'];
 
-const labels: Record<TaskStatus, string> = {
+const tabLabels: Record<TaskStatus, string> = {
+  todo: 'TODO',
+  in_progress: 'In-Progress',
+  done: 'Done',
+};
+
+const columnLabels: Record<TaskStatus, string> = {
   todo: 'To do',
   in_progress: 'In progress',
   done: 'Done',
 };
 
+const screenUnderHeader = (headerHeight: number) => ({
+  flex: 1,
+  minHeight: 0,
+  paddingTop: headerHeight,
+});
+
+const FAB_SIZE = 56;
+const FAB_OVERLAP_INTO_TAB_BAR = 40;
+const FAB_RIGHT_INSET = tokens.spacing.xxl;
+
 export default function ProjectBoardScreen() {
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
+  const headerHeight = useHeaderHeight();
+  const tabBarHeight = useBottomTabBarHeight();
   const router = useRouter();
-  const { width: windowWidth } = useWindowDimensions();
-  const isCompact = windowWidth <= COMPACT_LAYOUT_MAX_WIDTH;
-  const { colors } = useMovetaskTheme();
+  const { colors, resolved } = useMovetaskTheme();
   const { tasks, moveTask, moveState } = useTasksFacade(projectId);
+  const [selectedTab, setSelectedTab] = useState<TaskStatus>('todo');
   const [moveTarget, setMoveTarget] = useState<Task | null>(null);
 
   const byStatus = useMemo(() => {
@@ -45,11 +63,13 @@ export default function ProjectBoardScreen() {
     (tasks.data ?? []).forEach((t) => {
       map[t.status].push(t);
     });
-    COLUMNS.forEach((c) => {
+    STATUSES.forEach((c) => {
       map[c].sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title));
     });
     return map;
   }, [tasks.data]);
+
+  const listForTab = byStatus[selectedTab];
 
   const applyMove = useCallback(
     async (to: TaskStatus) => {
@@ -71,101 +91,157 @@ export default function ProjectBoardScreen() {
           fromIndex,
           toIndex: toList.length,
         }).unwrap();
+        setSelectedTab(to);
       } catch {
-        /* noop */
+        void 0;
       }
       setMoveTarget(null);
     },
     [byStatus, moveTarget, moveTask],
   );
 
+  const newTaskRoute = {
+    pathname: '/(app)/(tabs)/projects/[projectId]/task/new' as const,
+    params: { projectId },
+  };
+  const fabBottom = Math.max(tokens.spacing.sm, tabBarHeight - FAB_OVERLAP_INTO_TAB_BAR);
+  const listBottomPad = fabBottom + FAB_SIZE + tokens.spacing.md;
+
+  const newTaskFab = (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="New task"
+      onPress={() => router.push(newTaskRoute)}
+      style={({ pressed }) => [
+        styles.fab,
+        {
+          bottom: fabBottom,
+          right: FAB_RIGHT_INSET,
+          opacity: pressed ? 0.92 : 1,
+        },
+      ]}
+    >
+      <LinearGradient
+        colors={gradientStops(primaryButtonGradient(resolved))}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFillObject}
+      />
+      <FontAwesome name="plus" size={26} color={colors.primaryText} />
+    </Pressable>
+  );
+
   if (tasks.isLoading) {
     return (
-      <Screen>
+      <Screen contentStyle={screenUnderHeader(headerHeight)}>
         <Loader />
+        {newTaskFab}
       </Screen>
     );
   }
 
   if (tasks.isError) {
     return (
-      <Screen>
-        <ErrorState message="Could not load tasks" action={<AppButton title="Retry" onPress={tasks.refetch} />} />
+      <Screen contentStyle={screenUnderHeader(headerHeight)}>
+        <ErrorState
+          message="Could not load tasks"
+          action={<AppButton title="Retry" onPress={tasks.refetch} />}
+        />
+        {newTaskFab}
       </Screen>
     );
   }
 
   const total = (tasks.data ?? []).length;
 
-  const columnNodes = COLUMNS.map((col) => (
-    <View
-      key={col}
-      style={[
-        styles.column,
-        isCompact ? styles.columnCompact : styles.columnWide,
-        { borderColor: colors.border, backgroundColor: colors.surface },
-      ]}>
-      <AppText variant="label" style={styles.colTitle}>
-        {labels[col]}
-      </AppText>
-      <FlatList
-        data={byStatus[col]}
-        scrollEnabled={false}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.taskRow}>
+  const refreshControl = (
+    <RefreshControl refreshing={tasks.isFetching} onRefresh={() => void tasks.refetch()} />
+  );
+
+  return (
+    <Screen contentStyle={screenUnderHeader(headerHeight)}>
+      <View style={styles.tabRow}>
+        {STATUSES.map((status) => {
+          const selected = selectedTab === status;
+          return (
+            <Pressable
+              key={status}
+              accessibilityRole="tab"
+              accessibilityState={{ selected }}
+              accessibilityLabel={`${tabLabels[status]} tasks`}
+              onPress={() => setSelectedTab(status)}
+              style={({ pressed }) => [
+                styles.tab,
+                {
+                  backgroundColor: selected ? colors.primary : colors.surface,
+                  borderColor: selected ? colors.primary : colors.border,
+                  opacity: pressed ? 0.92 : 1,
+                },
+              ]}
+            >
+              <AppText
+                variant="caption"
+                numberOfLines={1}
+                style={{ color: selected ? colors.primaryText : colors.text, fontWeight: '600' }}
+              >
+                {tabLabels[status]}
+              </AppText>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {total === 0 ? (
+        <View style={{ flex: 1, paddingBottom: listBottomPad }}>
+          <EmptyState
+            title="No tasks"
+            message="Add a task to see it here."
+            action={<AppButton title="Add task" onPress={() => router.push(newTaskRoute)} />}
+          />
+        </View>
+      ) : (
+        <FlatList
+          data={listForTab}
+          keyExtractor={(item) => item.id}
+          style={styles.list}
+          contentContainerStyle={
+            listForTab.length === 0
+              ? styles.listEmpty
+              : [styles.listContent, { paddingBottom: listBottomPad }]
+          }
+          refreshControl={refreshControl}
+          keyboardShouldPersistTaps="handled"
+          ListEmptyComponent={
+            <EmptyState
+              title={`No ${columnLabels[selectedTab]} tasks`}
+              message="Switch tabs or create a task."
+              action={
+                <AppButton
+                  title="Add task"
+                  variant="secondary"
+                  onPress={() => router.push(newTaskRoute)}
+                />
+              }
+            />
+          }
+          renderItem={({ item }) => (
             <TaskCard
               task={item}
               onPress={() => router.push(`/(app)/(tabs)/projects/${projectId}/task/${item.id}`)}
+              trailing={
+                <AppButton
+                  title="Move"
+                  variant="ghost"
+                  onPress={() => setMoveTarget(item)}
+                  style={styles.moveInCard}
+                />
+              }
             />
-            <AppButton title="Move" variant="ghost" onPress={() => setMoveTarget(item)} />
-          </View>
-        )}
-      />
-    </View>
-  ));
-
-  return (
-    <Screen>
-      <View style={[styles.toolbar, isCompact && styles.toolbarCompact]}>
-        <AppButton
-          title="Refresh"
-          variant="ghost"
-          onPress={() => void tasks.refetch()}
-          style={isCompact ? styles.toolbarBtn : undefined}
+          )}
         />
-        <AppButton
-          title="Add task"
-          variant="secondary"
-          onPress={() => router.push(`/(app)/(tabs)/projects/${projectId}/task/new`)}
-          style={isCompact ? styles.toolbarBtn : undefined}
-        />
-      </View>
-      {total === 0 ? (
-        <EmptyState
-          title="No tasks"
-          message="Add a task to see it on the board."
-          action={
-            <AppButton title="Add task" onPress={() => router.push(`/(app)/(tabs)/projects/${projectId}/task/new`)} />
-          }
-        />
-      ) : isCompact ? (
-        <ScrollView
-          style={styles.boardScroll}
-          contentContainerStyle={styles.boardCompact}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator>
-          {columnNodes}
-        </ScrollView>
-      ) : (
-        <ScrollView
-          horizontal
-          style={styles.boardScroll}
-          contentContainerStyle={styles.boardWide}
-          showsHorizontalScrollIndicator>
-          {columnNodes}
-        </ScrollView>
       )}
+
+      {newTaskFab}
 
       <Modal visible={!!moveTarget} transparent animationType="fade">
         <View style={styles.modalBackdrop}>
@@ -176,22 +252,30 @@ export default function ProjectBoardScreen() {
             onPress={() => setMoveTarget(null)}
           />
           <View
-            style={[styles.modalCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
-            onStartShouldSetResponder={() => true}>
-            <AppText variant="title" style={styles.modalTitle}>
-              Move task
-            </AppText>
-            {COLUMNS.map((c) => (
-              <AppButton
-                key={c}
-                title={labels[c]}
-                variant={moveTarget?.status === c ? 'primary' : 'secondary'}
-                loading={moveState.isLoading}
-                onPress={() => void applyMove(c)}
-                style={styles.moveBtn}
-              />
-            ))}
-            <AppButton title="Cancel" variant="ghost" onPress={() => setMoveTarget(null)} />
+            style={[styles.modalCardWrap, neonContainerStyle(resolved, tokens.radius.lg)]}
+            onStartShouldSetResponder={() => true}
+          >
+            <LinearGradient
+              colors={gradientStops(cardSurfaceGradient(resolved, colors))}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[styles.modalCard, { borderColor: 'transparent' }]}
+            >
+              <AppText variant="title" style={styles.modalTitle}>
+                Move task
+              </AppText>
+              {STATUSES.map((c) => (
+                <AppButton
+                  key={c}
+                  title={columnLabels[c]}
+                  variant={moveTarget?.status === c ? 'primary' : 'secondary'}
+                  loading={moveState.isLoading}
+                  onPress={() => void applyMove(c)}
+                  style={styles.moveBtn}
+                />
+              ))}
+              <AppButton title="Cancel" variant="ghost" onPress={() => setMoveTarget(null)} />
+            </LinearGradient>
           </View>
         </View>
       </Modal>
@@ -200,64 +284,63 @@ export default function ProjectBoardScreen() {
 }
 
 const styles = StyleSheet.create({
-  toolbar: {
+  tabRow: {
+    flexDirection: 'row',
     marginTop: tokens.spacing.sm,
     marginBottom: tokens.spacing.md,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: tokens.spacing.sm,
+    gap: tokens.spacing.xs,
   },
-  toolbarCompact: {
-    flexWrap: 'wrap',
-    rowGap: tokens.spacing.sm,
-  },
-  toolbarBtn: {
-    flexGrow: 1,
-    minWidth: 120,
-    maxWidth: '48%',
-  },
-  boardScroll: { flex: 1 },
-  boardCompact: {
-    paddingBottom: tokens.spacing.xxl,
-    gap: tokens.spacing.lg,
-  },
-  boardWide: {
-    flexDirection: 'row',
-    paddingBottom: tokens.spacing.xl,
-    gap: tokens.spacing.md,
-    alignItems: 'flex-start',
-  },
-  column: {
+  tab: {
+    flex: 1,
+    minWidth: 0,
+    paddingVertical: tokens.spacing.sm,
+    paddingHorizontal: tokens.spacing.xs,
     borderRadius: tokens.radius.md,
     borderWidth: StyleSheet.hairlineWidth,
-    padding: tokens.spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  columnCompact: {
-    width: '100%',
-    maxWidth: '100%',
-    alignSelf: 'stretch',
+  list: { flex: 1 },
+  listContent: { paddingBottom: tokens.spacing.xxl },
+  listEmpty: { flexGrow: 1 },
+  moveInCard: {
+    minHeight: 40,
+    paddingHorizontal: tokens.spacing.sm,
+    alignSelf: 'flex-start',
   },
-  columnWide: {
-    width: 280,
-    flexShrink: 0,
-    marginRight: tokens.spacing.md,
-  },
-  colTitle: { marginBottom: tokens.spacing.sm },
-  taskRow: { marginBottom: tokens.spacing.xs },
   modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
     padding: tokens.spacing.lg,
   },
+  modalCardWrap: {
+    zIndex: 1,
+    maxWidth: '100%',
+    borderRadius: tokens.radius.lg,
+  },
   modalCard: {
     borderRadius: tokens.radius.lg,
     padding: tokens.spacing.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    zIndex: 1,
+    borderWidth: 0,
     maxWidth: '100%',
+    overflow: 'hidden',
   },
   modalTitle: { marginBottom: tokens.spacing.md },
   moveBtn: { marginBottom: tokens.spacing.sm },
+  fab: {
+    position: 'absolute',
+    width: FAB_SIZE,
+    height: FAB_SIZE,
+    borderRadius: FAB_SIZE / 2,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.22,
+    shadowRadius: 5,
+  },
 });

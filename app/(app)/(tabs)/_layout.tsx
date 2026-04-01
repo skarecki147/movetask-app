@@ -6,11 +6,11 @@ import { Tabs, useRouter } from 'expo-router';
 import { useAuthFacade } from '@/modules/auth/application/useAuthFacade';
 import { useMovetaskTheme } from '@/shared/theme/ThemeContext';
 import { AppIconButton } from '@/shared/ui/AppIconButton';
+import { NeonHeaderTitle } from '@/shared/ui/NeonHeaderTitle';
+import { ThemedHeaderBackground } from '@/shared/ui/ThemedHeaderBackground';
+import { ThemedTabBarBackground } from '@/shared/ui/ThemedTabBarBackground';
 
-function TabBarIcon(props: {
-  name: ComponentProps<typeof FontAwesome>['name'];
-  color: string;
-}) {
+function TabBarIcon(props: { name: ComponentProps<typeof FontAwesome>['name']; color: string }) {
   return <FontAwesome size={24} style={{ marginBottom: -2 }} {...props} />;
 }
 
@@ -24,15 +24,25 @@ export default function TabsLayout() {
       screenOptions={{
         tabBarActiveTintColor: colors.tint,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
-        headerStyle: { backgroundColor: colors.surface },
+        tabBarStyle: {
+          backgroundColor: 'transparent',
+          borderTopWidth: 0,
+          elevation: 0,
+        },
+        tabBarBackground: () => <ThemedTabBarBackground />,
+        headerTransparent: true,
+        headerBackground: () => <ThemedHeaderBackground />,
+        headerStyle: { backgroundColor: 'transparent' },
         headerTintColor: colors.text,
+        headerTitle: (props) => <NeonHeaderTitle {...props} />,
         headerShadowVisible: false,
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="projects"
         options={{
           title: 'Projects',
+          headerShown: false,
           tabBarIcon: ({ color }) => <TabBarIcon name="folder-open" color={color} />,
         }}
       />
@@ -53,7 +63,8 @@ export default function TabsLayout() {
               accessibilityLabel="Sign out"
               onPress={() => {
                 void signOut().then(() => router.replace('/(auth)/sign-in'));
-              }}>
+              }}
+            >
               <FontAwesome name="sign-out" size={22} color={colors.text} />
             </AppIconButton>
           ),

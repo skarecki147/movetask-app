@@ -1,9 +1,12 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo } from 'react';
+import { View } from 'react-native';
 
 import { useProjectsFacade } from '@/modules/projects/application/useProjectsFacade';
 import { useMovetaskTheme } from '@/shared/theme/ThemeContext';
 import { AppIconButton } from '@/shared/ui/AppIconButton';
+import { NeonHeaderTitle } from '@/shared/ui/NeonHeaderTitle';
+import { ThemedHeaderBackground } from '@/shared/ui/ThemedHeaderBackground';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 export default function ProjectLayout() {
@@ -30,21 +33,28 @@ export default function ProjectLayout() {
     <Stack
       screenOptions={{
         headerShown: true,
-        headerStyle: { backgroundColor: colors.surface },
+        headerTransparent: true,
+        headerBackground: () => <ThemedHeaderBackground />,
+        headerStyle: { backgroundColor: 'transparent' },
         headerTintColor: colors.text,
+        headerTitle: (props) => <NeonHeaderTitle {...props} />,
         headerShadowVisible: false,
         title,
-      }}>
+      }}
+    >
       <Stack.Screen
         name="index"
         options={{
           title,
           headerRight: () => (
-            <AppIconButton
-              accessibilityLabel="Open list view"
-              onPress={() => router.push(listHref)}>
-              <FontAwesome name="list" size={22} color={colors.text} />
-            </AppIconButton>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <AppIconButton
+                accessibilityLabel="Open list view"
+                onPress={() => router.push(listHref)}
+              >
+                <FontAwesome name="list" size={22} color={colors.text} />
+              </AppIconButton>
+            </View>
           ),
         }}
       />
@@ -55,7 +65,8 @@ export default function ProjectLayout() {
           headerRight: () => (
             <AppIconButton
               accessibilityLabel="Open board view"
-              onPress={() => router.push(boardHref)}>
+              onPress={() => router.push(boardHref)}
+            >
               <FontAwesome name="columns" size={20} color={colors.text} />
             </AppIconButton>
           ),

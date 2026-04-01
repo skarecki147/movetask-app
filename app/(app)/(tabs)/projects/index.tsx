@@ -1,10 +1,12 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Modal, Platform, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { useProjectsFacade } from '@/modules/projects/application/useProjectsFacade';
 import type { Project } from '@/modules/projects/domain/project';
+import { neonContainerStyle } from '@/shared/theme/neon';
 import { useMovetaskTheme } from '@/shared/theme/ThemeContext';
 import { tokens } from '@/shared/theme/tokens';
 import { useAppDispatch } from '@/store/hooks';
@@ -23,7 +25,8 @@ import { Screen } from '@/shared/ui/Screen';
 import { ProjectsList } from './ProjectsList';
 
 export default function ProjectsScreen() {
-  const { colors } = useMovetaskTheme();
+  const { colors, resolved } = useMovetaskTheme();
+  const headerHeight = useHeaderHeight();
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { projects, createProject, createState, deleteProject, deleteState, reorderProjects } =
@@ -45,7 +48,10 @@ export default function ProjectsScreen() {
   const onCreate = async () => {
     if (!name.trim()) return;
     try {
-      await createProject({ name: name.trim(), description: description.trim() || undefined }).unwrap();
+      await createProject({
+        name: name.trim(),
+        description: description.trim() || undefined,
+      }).unwrap();
       setName('');
       setDescription('');
       setOpen(false);
@@ -90,10 +96,7 @@ export default function ProjectsScreen() {
   }, [deleteProject, projectToDelete]);
 
   const renderProjectCard = useCallback(
-    (
-      item: Project,
-      options: { drag?: () => void; isActive?: boolean } = {},
-    ) => (
+    (item: Project, options: { drag?: () => void; isActive?: boolean } = {}) => (
       <AppCard style={[styles.card, options.isActive ? styles.cardActive : null]}>
         <View style={styles.cardRow}>
           {Platform.OS !== 'web' && options.drag ? (
@@ -102,7 +105,8 @@ export default function ProjectsScreen() {
               delayLongPress={180}
               style={styles.dragHandle}
               accessibilityRole="button"
-              accessibilityLabel={`Reorder project ${item.name}`}>
+              accessibilityLabel={`Reorder project ${item.name}`}
+            >
               <FontAwesome name="bars" size={18} color={colors.textMuted} />
             </Pressable>
           ) : null}
@@ -112,12 +116,14 @@ export default function ProjectsScreen() {
                 style={styles.titlePressable}
                 accessibilityRole="button"
                 accessibilityLabel={`Open project ${item.name}`}
-                onPress={() => openProject(item.id)}>
+                onPress={() => openProject(item.id)}
+              >
                 <AppText variant="title">{item.name}</AppText>
               </Pressable>
               <AppIconButton
                 accessibilityLabel={`Delete project ${item.name}`}
-                onPress={() => requestDeleteProject(item)}>
+                onPress={() => requestDeleteProject(item)}
+              >
                 <FontAwesome name="trash-o" size={20} color={colors.danger} />
               </AppIconButton>
             </View>
@@ -125,7 +131,8 @@ export default function ProjectsScreen() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`Open project ${item.name}`}
-                onPress={() => openProject(item.id)}>
+                onPress={() => openProject(item.id)}
+              >
                 <AppText variant="body" muted numberOfLines={2} style={styles.desc}>
                   {item.description}
                 </AppText>
@@ -149,7 +156,10 @@ export default function ProjectsScreen() {
   if (projects.isError) {
     return (
       <Screen>
-        <ErrorState message="Could not load projects" action={<AppButton title="Retry" onPress={projects.refetch} />} />
+        <ErrorState
+          message="Could not load projects"
+          action={<AppButton title="Retry" onPress={projects.refetch} />}
+        />
       </Screen>
     );
   }
@@ -168,7 +178,7 @@ export default function ProjectsScreen() {
 
   return (
     <Screen>
-      <View style={styles.body}>
+      <View style={[styles.body, { paddingTop: headerHeight }]}>
         <View style={styles.header}>
           <AppButton title="New project" variant="secondary" onPress={() => setOpen(true)} />
         </View>
@@ -192,13 +202,23 @@ export default function ProjectsScreen() {
             onPress={() => setOpen(false)}
           />
           <View
-            style={[styles.modalCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
-            onStartShouldSetResponder={() => true}>
+            style={[
+              styles.modalCard,
+              neonContainerStyle(resolved, tokens.radius.lg),
+              { backgroundColor: colors.surface },
+            ]}
+            onStartShouldSetResponder={() => true}
+          >
             <AppText variant="title" style={styles.modalTitle}>
               New project
             </AppText>
             <AppInput label="Name" value={name} onChangeText={setName} />
-            <AppInput label="Description" value={description} onChangeText={setDescription} multiline />
+            <AppInput
+              label="Description"
+              value={description}
+              onChangeText={setDescription}
+              multiline
+            />
             <View style={styles.modalActions}>
               <AppButton title="Cancel" variant="ghost" onPress={() => setOpen(false)} />
               <AppButton title="Create" onPress={onCreate} loading={createState.isLoading} />
@@ -263,5 +283,10 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
   },
   modalTitle: { marginBottom: tokens.spacing.md },
-  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: tokens.spacing.sm, marginTop: tokens.spacing.md },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: tokens.spacing.sm,
+    marginTop: tokens.spacing.md,
+  },
 });

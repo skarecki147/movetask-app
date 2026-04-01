@@ -1,6 +1,6 @@
+import { useHeaderHeight } from '@react-navigation/elements';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { useTasksFacade } from '@/modules/tasks/application/useTasksFacade';
@@ -10,6 +10,7 @@ import { AppButton } from '@/shared/ui/AppButton';
 import { AppChip } from '@/shared/ui/AppChip';
 import { AppInput } from '@/shared/ui/AppInput';
 import { AppText } from '@/shared/ui/AppText';
+import { DueDatePickerModal } from '@/shared/ui/DueDatePickerModal';
 import { Screen } from '@/shared/ui/Screen';
 
 const statuses: TaskStatus[] = ['todo', 'in_progress', 'done'];
@@ -17,6 +18,7 @@ const priorities: TaskPriority[] = ['low', 'medium', 'high'];
 
 export default function NewTaskScreen() {
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
+  const headerHeight = useHeaderHeight();
   const router = useRouter();
   const { createTask, createState } = useTasksFacade(projectId);
   const [title, setTitle] = useState('');
@@ -28,14 +30,6 @@ export default function NewTaskScreen() {
   const [tags, setTags] = useState('');
 
   const dueDateValue = dueDate ? new Date(`${dueDate}T00:00:00`) : new Date();
-
-  const onDueDateChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (Platform.OS !== 'ios') {
-      setShowDueDatePicker(false);
-    }
-    if (!selectedDate) return;
-    setDueDate(selectedDate.toISOString().slice(0, 10));
-  };
 
   const onSave = async () => {
     if (!title.trim()) return;
@@ -60,7 +54,7 @@ export default function NewTaskScreen() {
   };
 
   return (
-    <Screen scroll>
+    <Screen scroll contentStyle={{ paddingTop: headerHeight }}>
       <AppInput label="Title" value={title} onChangeText={setTitle} />
       <AppInput label="Description" value={description} onChangeText={setDescription} multiline />
       <AppText variant="label" style={styles.section}>
@@ -98,14 +92,12 @@ export default function NewTaskScreen() {
           </View>
         </Pressable>
       )}
-      {showDueDatePicker && Platform.OS !== 'web' ? (
-        <DateTimePicker
-          mode="date"
-          value={dueDateValue}
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={onDueDateChange}
-        />
-      ) : null}
+      <DueDatePickerModal
+        visible={showDueDatePicker && Platform.OS !== 'web'}
+        date={dueDateValue}
+        onConfirm={(d) => setDueDate(d.toISOString().slice(0, 10))}
+        onDismiss={() => setShowDueDatePicker(false)}
+      />
       <AppInput label="Tags (comma-separated)" value={tags} onChangeText={setTags} />
       <AppButton title="Create task" onPress={onSave} loading={createState.isLoading} />
     </Screen>

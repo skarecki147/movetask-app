@@ -1,3 +1,4 @@
+import { useHeaderHeight } from '@react-navigation/elements';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
@@ -7,14 +8,14 @@ import { Screen } from '@/shared/ui/Screen';
 import { AppButton } from '@/shared/ui/AppButton';
 import { AppInput } from '@/shared/ui/AppInput';
 import { AppText } from '@/shared/ui/AppText';
-import {
-  emailFormatError,
-  passwordMinLengthError,
-} from '@/shared/lib/authCredentialsValidation';
+import { emailFormatError, passwordMinLengthError } from '@/shared/lib/authCredentialsValidation';
 import { rtkMutationErrorMessage } from '@/shared/lib/rtkMutationErrorMessage';
+import { useMovetaskTheme } from '@/shared/theme/ThemeContext';
 import { tokens } from '@/shared/theme/tokens';
 
 export default function SignInScreen() {
+  const headerHeight = useHeaderHeight();
+  const { colors } = useMovetaskTheme();
   const router = useRouter();
   const { signIn, signInState } = useAuthFacade();
   const [email, setEmail] = useState('');
@@ -39,7 +40,7 @@ export default function SignInScreen() {
   };
 
   return (
-    <Screen scroll>
+    <Screen scroll contentStyle={{ paddingTop: headerHeight }}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <AppText variant="heading" style={styles.heading}>
           Welcome back
@@ -69,7 +70,7 @@ export default function SignInScreen() {
           }}
         />
         {error ? (
-          <AppText variant="caption" style={styles.err}>
+          <AppText variant="caption" style={[styles.err, { color: colors.danger }]}>
             {error}
           </AppText>
         ) : null}
@@ -90,6 +91,6 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   heading: { marginTop: tokens.spacing.lg, marginBottom: tokens.spacing.sm },
   sub: { marginBottom: tokens.spacing.lg },
-  err: { color: '#dc2626', marginBottom: tokens.spacing.sm },
+  err: { marginBottom: tokens.spacing.sm },
   footer: { flexDirection: 'row', marginTop: tokens.spacing.lg, alignItems: 'center' },
 });

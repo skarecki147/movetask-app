@@ -1,4 +1,5 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
@@ -24,6 +25,7 @@ import { TodayTasksList } from './TodayTasksList';
 
 export default function TodayScreen() {
   const router = useRouter();
+  const headerHeight = useHeaderHeight();
   const { colors } = useMovetaskTheme();
   const filters = useAppSelector((s) => s.ui.taskFilters);
   const tasksQuery = useAllTasksFacade();
@@ -80,7 +82,8 @@ export default function TodayScreen() {
                 delayLongPress={180}
                 hitSlop={10}
                 accessibilityRole="button"
-                accessibilityLabel={`Reorder task ${task.title}`}>
+                accessibilityLabel={`Reorder task ${task.title}`}
+              >
                 <FontAwesome name="bars" size={18} color={colors.textMuted} />
               </Pressable>
             ) : undefined
@@ -118,7 +121,7 @@ export default function TodayScreen() {
 
   return (
     <Screen>
-      <View style={styles.body}>
+      <View style={[styles.body, { paddingTop: headerHeight }]}>
         <AppText variant="body" muted style={styles.sub}>
           Tasks due today or overdue
         </AppText>
