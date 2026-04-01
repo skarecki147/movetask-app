@@ -41,7 +41,7 @@ export function ThemedHeaderBackground() {
   });
 
   return (
-    <View style={StyleSheet.absoluteFill}>
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <LinearGradient
         colors={gradientStops(base as readonly [string, string, string])}
         start={{ x: 0, y: 0 }}

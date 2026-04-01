@@ -35,6 +35,7 @@ export default function TabsLayout() {
         headerStyle: { backgroundColor: 'transparent' },
         headerTintColor: colors.text,
         headerTitle: (props) => <NeonHeaderTitle {...props} />,
+        headerTitleAlign: 'center',
         headerShadowVisible: false,
       }}
     >

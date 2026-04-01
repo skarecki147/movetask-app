@@ -38,6 +38,7 @@ export default function ProjectLayout() {
         headerStyle: { backgroundColor: 'transparent' },
         headerTintColor: colors.text,
         headerTitle: (props) => <NeonHeaderTitle {...props} />,
+        headerTitleAlign: 'center',
         headerShadowVisible: false,
         title,
       }}

@@ -38,7 +38,7 @@ export function NeonHeaderTitle({ children, allowFontScaling, onLayout, style }:
   }));
 
   return (
-    <View style={styles.wrap} onLayout={onLayout}>
+    <View pointerEvents="none" style={styles.wrap} onLayout={onLayout}>
       <Text style={[navStyle, base]} allowFontScaling={allowFontScaling} numberOfLines={1}>
         {children}
       </Text>

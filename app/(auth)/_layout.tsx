@@ -27,6 +27,7 @@ export default function AuthLayout() {
         headerStyle: { backgroundColor: 'transparent' },
         headerTintColor: colors.text,
         headerTitle: (props) => <NeonHeaderTitle {...props} />,
+        headerTitleAlign: 'center',
         headerShadowVisible: false,
         title: 'MoveTask',
       }}
